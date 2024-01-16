@@ -24,12 +24,11 @@ const userSchema = new mongoose.Schema({
     default: null,
   },
   isAdmin: { type: Boolean, default: false },
-  client: {
+  admin: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Admin",
     default: null,
   },
-
 });
 
 const User = mongoose.model("User", userSchema);

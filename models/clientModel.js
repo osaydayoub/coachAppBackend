@@ -12,9 +12,6 @@ const clientSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    required: [true, "Must provide an email"],
-    match: [/^\S+@\S+\.\S+$/, "Please add a valid email"],
-    unique: [true, "This email is already in use"],
   },
   startDate: {
     type: Date,
@@ -27,7 +24,6 @@ const clientSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: "Workout",
     },
-    { exercise: { type: String }, date: { type: Date, default: Date.now } },
   ],
   totalCost: {
     type: Number,
