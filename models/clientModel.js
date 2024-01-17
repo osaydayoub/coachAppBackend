@@ -47,7 +47,6 @@ const clientSchema = new mongoose.Schema({
   weeklyTracking: [{ date: { type: Date } }],
 });
 
-// unique: [true, "This ID is already in use"],
 
 const Client = mongoose.model("Client", clientSchema);
 
