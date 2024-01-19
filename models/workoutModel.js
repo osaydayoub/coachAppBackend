@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 
 const workoutSchema = new mongoose.Schema({
+  clientName:{ type: String },
   exercise: { type: String },
   date: { type: Date, default: Date.now },
 //   duration: { type: Number },

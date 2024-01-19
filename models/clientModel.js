@@ -8,25 +8,24 @@ const clientSchema = new mongoose.Schema({
   },
   age: {
     type: Number,
-    required: [true, "Must provide an age"],
+    default: 0,
+    // required: [true, "Must provide an age"],
   },
   email: {
     type: String,
   },
   startDate: {
     type: Date,
+    default: Date.now
   },
+  // package 
   numberOfWorkouts: {
     type: Number,
+    default: 0,
   },
-  workouts: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Workout",
-    },
-  ],
   totalCost: {
     type: Number,
+    default: 0,
   },
   paidAmount: {
     type: Number,
@@ -34,7 +33,16 @@ const clientSchema = new mongoose.Schema({
   },
   caloricIntake: {
     type: Number,
+    default: 0,
   },
+  // package 
+  workouts: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Workout",
+    },
+  ],
+
   dailyTracking: [
     {
       date: { type: Date },
