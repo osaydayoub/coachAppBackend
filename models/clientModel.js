@@ -49,7 +49,7 @@ const clientSchema = new mongoose.Schema({
       calories: { type: Number },
       waterAmount: { type: Number },
       sleepHours: { type: Number },
-      stepsNumber: { type: Number },
+      // stepsNumber: { type: Number },
     },
   ],
   weeklyTracking: [{ date: { type: Date } }],

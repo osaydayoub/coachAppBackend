@@ -6,7 +6,7 @@ import Client from "../models/clientModel.js";
 // @access   Public
 export const getAllClients = async (req, res, next) => {
   try {
-    const clients = await Client.find({});
+    const clients = await Client.find({}).populate("workouts");
     res.status(STATUS_CODE.OK).send(clients);
   } catch (error) {
     next(error);
@@ -18,7 +18,7 @@ export const getAllClients = async (req, res, next) => {
 // @access   Public
 export const getClientById = async (req, res, next) => {
   try {
-    const client = await Client.findById(req.params.id);
+    const client = await Client.findById(req.params.id).populate("workouts");
     if (!client) {
       res.status(STATUS_CODE.NOT_FOUND);
       throw new Error("There is no client with this id");
@@ -109,26 +109,48 @@ export const assignPackage = async (req, res, next) => {
   }
 };
 
-// // @desc     addWorkout to an existing client 
-// // @route    PUT /api/v1/coach/clients/addWorkout
-// // @access   Public
-// export const addWorkout = async (req, res,next) => {
-//   try {
-//     console.log("addWorkout");
-//     const { clientID  ,workoutID} = req.body;
 
-//     const updatedUser = await Client.findByIdAndUpdate(clientID, {$push: {workouts: workoutID}}, {
-//       new: true,
-//     }).populate("workouts");
-//     if (!updatedUser) {
-//       res.status(STATUS_CODE.NOT_FOUND);
-//       throw new Error("No such user in the db");
-//     }
-//     res.send(updatedUser);
-//   } catch (error) {
-//     next(error);
-//   }
-// };
+// @desc     add Daily Tracking to a client with id
+// @route    PUT /api/v1/coach/clients/addDailyTracking/:id
+// @access   Public
+export const addDailyTracking = async (req, res, next) => {
+  const { date, calories, waterAmount, sleepHours } = req.body;
+  const { id } = req.params;
+  console.log(isNaN(calories));
+  try {
+    if (
+      isNaN(new Date(date)) ||
+      isNaN(calories) ||
+      isNaN(waterAmount) ||
+      isNaN(sleepHours)
+    ) {
+      res.status(STATUS_CODE.BAD_REQUEST);
+      throw new Error("Please include all fields");
+    }
 
+    const updatedUser = await Client.findByIdAndUpdate(
+      id,
+      {
+        $push: {
+          dailyTracking: {
+            date,
+            calories,
+            waterAmount,
+            sleepHours,
+          },
+        },
+      },
+      {
+        new: true,
+      }
+    );
 
-
+    if (!updatedUser) {
+      res.status(STATUS_CODE.NOT_FOUND);
+      throw new Error("No such client in the db");
+    }
+    res.send(updatedUser);
+  } catch (error) {
+    next(error);
+  }
+};

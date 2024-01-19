@@ -1,5 +1,11 @@
 import express from "express";
-import { addWorkout, assignPackage, createClient, getAllClients, getClientById } from "../controllers/clientController.js";
+import {
+    addDailyTracking,
+  assignPackage,
+  createClient,
+  getAllClients,
+  getClientById,
+} from "../controllers/clientController.js";
 const router = express.Router();
 
 // Route to get all clients
@@ -17,15 +23,12 @@ router.post("/", createClient);
 // Route to Assign a package to a client with id
 router.put("/assignPackage/:id", assignPackage);
 
-//TODO change it to get workout and implement add in workoutRoutes
-// Route to add a workout to client with id
-// router.put("/addWorkout", addWorkout);
 
 // Route to get all workouts for the client with id
 // router.put("/getWorkout/:id", getAllWorkouts);
 
-// // Route to add a dailyTracking to client with id
-// router.put("/addDailyTracking/:id", addDailyTracking);
+// Route to add a dailyTracking to client with id
+router.put("/addDailyTracking/:id", addDailyTracking);
 
 // // Route to add a weeklyTracking to client with id
 // router.put("/addWeeklyTracking/:id", addWeeklyTracking);
