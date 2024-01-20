@@ -44,8 +44,10 @@ export const loginUser = async (req, res, next) => {
       res.status(STATUS_CODE.BAD_REQUEST);
       throw new Error("Please add email and password");
     }
-    const user = await User.findOne({ email }).populate("client");
+    const user = await User.findOne({ email });
+    console.log(user);
     if (user) {
+      user.populate("client");
       const correctPassword = await bcrypt.compare(password, user.password);
       if (correctPassword) {
         res.status(STATUS_CODE.OK).send({
@@ -58,6 +60,9 @@ export const loginUser = async (req, res, next) => {
         res.status(STATUS_CODE.BAD_REQUEST);
         throw new Error("invalid credentials");
       }
+    }else{
+      res.status(STATUS_CODE.BAD_REQUEST);
+      throw new Error("invalid credentials");
     }
   } catch (error) {
     next(error);
