@@ -1,11 +1,12 @@
 import STATUS_CODE from "../constants/statusCode.js";
 import User from "../models/userModel.js";
+import Client from "../models/clientModel.js";
 import bcrypt from "bcryptjs";
 
 export const registerUser = async (req, res, next) => {
   try {
-    const { name, email, password } = req.body;
-    if (!name || !email || !password) {
+    const { name, age, email, password } = req.body;
+    if (!name || isNaN(age) || !email || !password) {
       res.status(STATUS_CODE.BAD_REQUEST);
       throw new Error("Please add all fields");
     }
@@ -21,10 +22,18 @@ export const registerUser = async (req, res, next) => {
       );
     }
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    const client = await Client.create({
+      name,
+      email,
+      age,
+    });
+
     const user = await User.create({
       name: name,
       email: email,
       password: hashedPassword,
+      client: client._id,
     });
     res.status(STATUS_CODE.CREATED).send({
       name: user.name,
@@ -60,7 +69,7 @@ export const loginUser = async (req, res, next) => {
         res.status(STATUS_CODE.BAD_REQUEST);
         throw new Error("invalid credentials");
       }
-    }else{
+    } else {
       res.status(STATUS_CODE.BAD_REQUEST);
       throw new Error("invalid credentials");
     }

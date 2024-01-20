@@ -20,7 +20,6 @@ export const getAllWorkouts = async (req, res, next) => {
 // @access   Public
 export const addWorkout = async (req, res, next) => {
   try {
-    console.log("addWorkout");
     const { exercise, date, clientID } = req.body;
     const clientExists = await Client.findById(clientID);
     if (!clientExists) {
