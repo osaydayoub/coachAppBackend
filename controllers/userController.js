@@ -45,7 +45,7 @@ export const loginUser = async (req, res, next) => {
       throw new Error("Please add email and password");
     }
     const user = await User.findOne({ email });
-    console.log(user);
+    // console.log(user);
     if (user) {
       user.populate("client");
       const correctPassword = await bcrypt.compare(password, user.password);
