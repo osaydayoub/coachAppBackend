@@ -56,7 +56,12 @@ export const loginUser = async (req, res, next) => {
     const user = await User.findOne({ email });
     // console.log(user);
     if (user) {
-      user.populate("client");
+      user.populate({
+        path: "client",
+        populate: {
+          path: "workouts",
+        },
+      });
       const correctPassword = await bcrypt.compare(password, user.password);
       if (correctPassword) {
         res.status(STATUS_CODE.OK).send({
