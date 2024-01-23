@@ -34,15 +34,7 @@ export const registerUser = async (req, res, next) => {
       email: email,
       password: hashedPassword,
       client: client._id,
-    }).populate("client");
-
-    // user.populate({
-    //   path: "client",
-    //   populate: {
-    //     path: "workouts",
-    //   },
-    // });
-
+    });
     res.status(STATUS_CODE.CREATED).send({
       name: user.name,
       email: user.email,
