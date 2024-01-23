@@ -35,6 +35,14 @@ export const registerUser = async (req, res, next) => {
       password: hashedPassword,
       client: client._id,
     });
+
+    user.populate({
+      path: "client",
+      populate: {
+        path: "workouts",
+      },
+    });
+
     res.status(STATUS_CODE.CREATED).send({
       name: user.name,
       email: user.email,
