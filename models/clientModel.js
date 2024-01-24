@@ -33,7 +33,7 @@ const clientSchema = new mongoose.Schema({
   },
   caloricIntake: {
     type: Number,
-    default: 0,
+    default: 2500,
   },
   // package 
   workouts: [
