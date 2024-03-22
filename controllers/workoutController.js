@@ -78,3 +78,25 @@ export const addWorkout = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc      Delete workouts by workout ID
+// @route     DELETE /api/v1/coach/workouts/:id
+// @access    Private
+export const deleteWorkoutById = async (req, res, next) => {
+  const { id } = req.params;
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user.isAdmin && user.client.toString() !== req.params.id) {
+      res.status(STATUS_CODE.UNAUTHORIZED);
+      throw new Error("Not authorized");
+    }
+    const deletedWorkout = await Workout.findByIdAndDelete(id);
+    if (!deletedWorkout) {
+      res.status(404).send({ error: "Workout not found" });
+      return;
+    }
+    res.status(STATUS_CODE.OK).send("Workout deleted successfully");
+  } catch (error) {
+    next(error);
+  }
+};

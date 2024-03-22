@@ -1,6 +1,7 @@
 import express from "express";
 import {
   addWorkout,
+  deleteWorkoutById,
   getAllWorkouts,
   getWorkoutsByClientId,
 } from "../controllers/workoutController.js";
@@ -17,5 +18,8 @@ router.get("/:id", getWorkoutsByClientId);
 
 // Route to add a new workout
 router.post("/", addWorkout);
+
+// Router to delete a workout by id
+router.delete("/:id", deleteWorkoutById);
 
 export default router;
