@@ -4,7 +4,7 @@ import User from "../models/userModel.js";
 
 // @des      Get all the clients
 // @route    GET /api/v1/coach/clients
-// @access   Public
+// @access   Private
 export const getAllClients = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id);
@@ -21,7 +21,7 @@ export const getAllClients = async (req, res, next) => {
 
 // @des      Get a client with id
 // @route    GET /api/v1/coach/clients/:id
-// @access   Public
+// @access   Private
 export const getClientById = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id);
@@ -86,7 +86,7 @@ export const createClient = async (req, res, next) => {
 
 // @desc     Assign a package to a client with id
 // @route    PUT /api/v1/coach/clients/assignPackage/:id
-// @access   Public
+// @access   Private
 export const assignPackage = async (req, res, next) => {
   const { numberOfWorkouts, totalCost, paidAmount, caloricIntake } = req.body;
   const { id } = req.params;
@@ -135,7 +135,7 @@ const isSameDay = (date1, date2) => {
 
 // @desc     add Daily Tracking to a client with id
 // @route    PUT /api/v1/coach/clients/dailyTracking/:id
-// @access   Public
+// @access   Private
 export const addDailyTracking = async (req, res, next) => {
   const { date, calories, waterAmount, sleepHours } = req.body;
   const { id } = req.params;
@@ -216,7 +216,7 @@ export const addDailyTracking = async (req, res, next) => {
 
 // @desc     get a Daily Tracking of a client with id
 // @route    GET /api/v1/coach/clients/dailyTracking/:id
-// @access   Public
+// @access   Private
 
 export const getDailyTracking = async (req, res, next) => {
   const { date } = req.body;

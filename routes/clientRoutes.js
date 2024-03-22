@@ -7,10 +7,10 @@ import {
   getClientById,
   getDailyTracking,
 } from "../controllers/clientController.js";
+import { protect } from "../middlewares/authMiddleware.js";
+
 const router = express.Router();
 
-//
-import { protect } from "../middlewares/authMiddleware.js";
 // Route to get all clients
 router.get("/", protect, getAllClients);
 
