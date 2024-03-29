@@ -1,6 +1,7 @@
 import express from "express";
 import {
   addDailyTracking,
+  addPayment,
   assignPackage,
   createClient,
   getAllClients,
@@ -31,6 +32,10 @@ router.put("/dailyTracking/:id", protect, addDailyTracking);
 
 // Route to get a dailyTracking of a client with id on a specific date.
 router.get("/dailyTracking/:id", protect, getDailyTracking);
+
+// Route to add a payment to client with id
+// router.put("/payment/:id", protect, addPayment);
+router.put("/payment/:id", addPayment);
 
 // // Route to add a weeklyTracking to client with id
 // router.put("/addWeeklyTracking/:id", addWeeklyTracking);

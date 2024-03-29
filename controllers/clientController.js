@@ -250,3 +250,39 @@ export const getDailyTracking = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc     Add a payment to client with id
+// @route    PUT /api/v1/coach/clients/payment/:id
+// @access   Private
+export const addPayment = async (req, res, next) => {
+  const { amount, date } = req.body;
+  const { id } = req.params;
+  try {
+    // const user = await User.findById(req.user.id);
+    // if (!user.isAdmin) {
+    //   res.status(STATUS_CODE.UNAUTHORIZED);
+    //   throw new Error("Not authorized");
+    // }
+    if (!amount || !date) {
+      res.status(STATUS_CODE.BAD_REQUEST);
+      throw new Error("Please add all fields");
+    }
+    const updatedClient = await Client.findByIdAndUpdate(
+      id,
+      {
+        $inc: { paidAmount: amount },
+        $push: { paymentHistory: { amount, date } },
+      },
+      {
+        new: true,
+      }
+    );
+    if (!updatedClient) {
+      res.status(STATUS_CODE.NOT_FOUND);
+      throw new Error("No such client in the db");
+    }
+    res.send(updatedClient);
+  } catch (error) {
+    next(error);
+  }
+};

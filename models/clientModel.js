@@ -16,9 +16,9 @@ const clientSchema = new mongoose.Schema({
   },
   startDate: {
     type: Date,
-    default: Date.now
+    default: Date.now,
   },
-  // package 
+  // package
   numberOfWorkouts: {
     type: Number,
     default: 0,
@@ -31,11 +31,17 @@ const clientSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  paymentHistory: [
+    {
+      amount: { type: Number },
+      date: { type: Date, default: Date.now },
+    },
+  ],
   caloricIntake: {
     type: Number,
     default: 2500,
   },
-  // package 
+  // package
   workouts: [
     {
       type: mongoose.Schema.Types.ObjectId,
@@ -54,7 +60,6 @@ const clientSchema = new mongoose.Schema({
   ],
   weeklyTracking: [{ date: { type: Date } }],
 });
-
 
 const Client = mongoose.model("Client", clientSchema);
 
