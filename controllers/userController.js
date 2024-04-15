@@ -2,6 +2,7 @@ import STATUS_CODE from "../constants/statusCode.js";
 import User from "../models/userModel.js";
 import Client from "../models/clientModel.js";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
 export const registerUser = async (req, res, next) => {
   try {
@@ -40,6 +41,7 @@ export const registerUser = async (req, res, next) => {
       email: user.email,
       client: user.client,
       isAdmin: user.isAdmin,
+      token: generateToken(user._id),
     });
   } catch (error) {
     next(error);
@@ -74,6 +76,7 @@ export const loginUser = async (req, res, next) => {
           email: user.email,
           client: user.client,
           isAdmin: user.isAdmin,
+          token: generateToken(user._id),
         });
       } else {
         res.status(STATUS_CODE.BAD_REQUEST);
@@ -86,4 +89,9 @@ export const loginUser = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
+};
+
+//Generate JWT
+const generateToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "30d" });
 };
