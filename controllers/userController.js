@@ -6,7 +6,7 @@ import jwt from "jsonwebtoken";
 
 export const registerUser = async (req, res, next) => {
   try {
-    const { name, age, email, password } = req.body;
+    const { name, age,weight, email, password } = req.body;
     if (!name || isNaN(age) || !email || !password) {
       res.status(STATUS_CODE.BAD_REQUEST);
       throw new Error("Please add all fields");
@@ -28,6 +28,7 @@ export const registerUser = async (req, res, next) => {
       name,
       email,
       age,
+      weight,
     });
 
     const user = await User.create({

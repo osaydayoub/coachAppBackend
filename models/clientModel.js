@@ -11,6 +11,11 @@ const clientSchema = new mongoose.Schema({
     default: 0,
     // required: [true, "Must provide an age"],
   },
+  weight:{
+    type: Number,
+    default: 0,
+    // required: [true, "Must provide an weight"],
+  },
   email: {
     type: String,
   },
