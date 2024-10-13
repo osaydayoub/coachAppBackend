@@ -4,7 +4,7 @@ import User from "../models/userModel.js";
 
 // @des      creats a new meal
 // @route    POST /api/v1/coach/meals
-// @access   Public
+// @access   Private
 export const createMeal = async (req, res, next) => {
   const { ingredients, type, totalCalories } = req.body;
   try {
@@ -31,7 +31,7 @@ export const createMeal = async (req, res, next) => {
 
 // @des      Get a client with id
 // @route    GET /api/v1/coach/meals/:type
-// @access   public
+// @access   Private
 export const getAllMealsByType = async (req, res, next) => {
   const mealType = req.params.type;
   try {

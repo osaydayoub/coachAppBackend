@@ -7,6 +7,7 @@ import userRoutes from "./routes/userRoutes.js";
 import clientRoutes from "./routes/clientRoutes.js";
 import workoutRoutes from "./routes/workoutRoutes.js";
 import mealRoutes from "./routes/mealRoutes.js";
+import productRoutes from "./routes/productRoutes.js"
 
 dotenv.config();
 
@@ -18,6 +19,7 @@ app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/coach/clients", clientRoutes);
 app.use("/api/v1/coach/workouts", workoutRoutes);
 app.use("/api/v1/coach/meals", mealRoutes);
+app.use("/api/v1/coach/products", productRoutes);
 
 app.use(errorHandler);
 
