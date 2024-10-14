@@ -2,11 +2,13 @@ import express from "express";
 import {
   addDailyTracking,
   addPayment,
+  addWeightTracking,
   assignPackage,
   createClient,
   getAllClients,
   getClientById,
   getDailyTracking,
+  getWeightTracking,
 } from "../controllers/clientController.js";
 import { protect } from "../middlewares/authMiddleware.js";
 
@@ -42,5 +44,12 @@ router.put("/payment/:id", addPayment);
 
 // // Rout to delete a client
 // router.delete("/:id", deleteClient);
+
+
+// Route to add a weightTracking to client with id
+router.put("/weightTracking/:id", protect, addWeightTracking);
+
+// Route to get a weightTracking of a client with id .
+router.get("/weightTracking/:id", protect, getWeightTracking);
 
 export default router;

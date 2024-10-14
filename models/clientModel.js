@@ -63,6 +63,13 @@ const clientSchema = new mongoose.Schema({
       // stepsNumber: { type: Number },
     },
   ],
+    // Weight tracking array with required fields
+    weightTracking: [
+      {
+        weight: { type: Number, required: true },  // The weight value in kg (required)
+        date: { type: Date, required: true },  // Date when the weight was logged (required)
+      }
+    ],
   weeklyTracking: [{ date: { type: Date } }],
 });
 

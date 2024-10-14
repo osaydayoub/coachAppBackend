@@ -286,3 +286,66 @@ export const addPayment = async (req, res, next) => {
     next(error);
   }
 };
+
+
+// @desc     Add a WeightTracking to client with id
+// @route    PUT /api/v1/coach/clients/weightTracking/:id
+// @access   Private
+
+export const addWeightTracking = async (req, res) => {
+  const { id } = req.params;  // Client's ID
+  const { weight, date } = req.body;  
+
+  if (!weight || !date) {
+    res.status(STATUS_CODE.BAD_REQUEST);
+    throw new Error("Weight and date are required");
+  }
+
+  try {
+    const client = await Client.findById(id);
+
+    if (!client) {
+      res.status(STATUS_CODE.NOT_FOUND);
+      throw new Error("No such client in the db");
+    }
+    const updatedClient = await Client.findByIdAndUpdate(
+      req.params.id,
+      {
+        $push: {
+          weightTracking: {
+            weight: weight,
+            date: date,
+          },
+        },
+      },
+      { new: true } // Return the updated document
+    );
+    if (!updatedClient) {
+      res.status(STATUS_CODE.NOT_FOUND);
+      throw new Error("No such client in the db");
+    }
+    res.send(updatedClient);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc     get a weightTracking of a client with id 
+// @route    GET /api/v1/coach/clients/weightTracking/:id
+// @access   Private
+export const getWeightTracking = async (req, res) => {
+  const { id } = req.params;  // Client's ID
+
+  try {
+    const client = await Client.findById(id);
+
+    if (!client) {
+      res.status(STATUS_CODE.NOT_FOUND);
+      throw new Error("No such client in the db");
+    }
+
+    res.send(client.weightTracking);
+  } catch (error) {
+    next(error);
+  }
+};
