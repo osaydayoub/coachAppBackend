@@ -24,6 +24,10 @@ const mealSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  ratings: {
+    type: Object,  // Ratings will be stored as an object with clientId as keys
+    default: {}    // Default to an empty object if no ratings exist
+  },
 });
 
 const Meal = mongoose.model("Meal", mealSchema);

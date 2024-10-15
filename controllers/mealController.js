@@ -29,7 +29,7 @@ export const createMeal = async (req, res, next) => {
   }
 };
 
-// @des      Get a client with id
+// @des      Get Meals By Type 
 // @route    GET /api/v1/coach/meals/:type
 // @access   Private
 export const getAllMealsByType = async (req, res, next) => {
@@ -48,8 +48,50 @@ export const getAllMealsByType = async (req, res, next) => {
       res.status(STATUS_CODE.BAD_REQUEST);
       throw new Error("Invalid meal type.");
     }
+    //Solutions to Prevent Exposing Client IDs so return only the rating of current Client
+    // const mealsWithUserRating = meals.map(meal => {
+    //   const userRating = meal.ratings[req.user.client] || null; // Get user's rating based on client ID
+    
+    //   const { ratings, ...mealWithoutRatings } = meal.toObject(); // Exclude ratings
+    //   return {
+    //     ...mealWithoutRatings,
+    //     ['user.client']: userRating, // Attach user's rating with a dot in the key
+    //   };
+    // });
     const meals = await Meal.find({ type: mealType });
     res.status(STATUS_CODE.OK).send(meals);
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+export const addMealRating = async (req, res,next) => {
+  const user = await User.findById(req.user.id);
+  if (!user) {
+    res.status(STATUS_CODE.UNAUTHORIZED);
+    throw new Error("Not authorized");
+  }
+  const mealId = req.params.id; 
+  const { clientId, rating } = req.body; 
+
+  try {
+    // Find the meal by ID
+    const meal = await Meal.findById(mealId);
+
+    if (!meal) {
+      res.status(STATUS_CODE.NOT_FOUND);
+      throw new Error("Meal not found");
+    }
+
+    const updatedMeal = await Meal.findOneAndUpdate(
+      { _id: mealId }, // Find the meal by ID
+      { 
+        $set: { [`ratings.${clientId}`]: rating } // Dynamically update the ratings field with the clientId as the key
+      },
+      { new: true, upsert: true } // Return the updated document and create it if it doesn't exist
+    );
+    res.status(STATUS_CODE.OK).send(updatedMeal);
   } catch (error) {
     next(error);
   }
