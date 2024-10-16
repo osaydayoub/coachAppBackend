@@ -20,6 +20,10 @@ app.use("/api/v1/coach/clients", clientRoutes);
 app.use("/api/v1/coach/workouts", workoutRoutes);
 app.use("/api/v1/coach/meals", mealRoutes);
 app.use("/api/v1/coach/products", productRoutes);
+// Define a route to prevent server from sleeping
+app.get("/keep-server-awake", (req, res) => {
+  res.send("Server is awake!");
+});
 
 app.use(errorHandler);
 
