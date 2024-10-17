@@ -11,7 +11,7 @@ const clientSchema = new mongoose.Schema({
     default: 0,
     // required: [true, "Must provide an age"],
   },
-  weight:{
+  weight: {
     type: Number,
     default: 0,
     // required: [true, "Must provide an weight"],
@@ -61,6 +61,13 @@ const clientSchema = new mongoose.Schema({
       waterAmount: { type: Number },
       sleepHours: { type: Number },
       // stepsNumber: { type: Number },
+    },
+  ],
+  // Weight tracking array with required fields
+  weightTracking: [
+    {
+      weight: { type: Number, required: true }, // The weight value in kg (required)
+      date: { type: Date, required: true }, // Date when the weight was logged (required)
     },
   ],
   dailyMeals: [
