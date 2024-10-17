@@ -23,6 +23,7 @@ export const getAllClients = async (req, res, next) => {
 // @route    GET /api/v1/coach/clients/:id
 // @access   Private
 export const getClientById = async (req, res, next) => {
+  console.log("getClientById called!");
   try {
     const user = await User.findById(req.user.id);
     if (!user.isAdmin && user.client.toString() !== req.params.id) {
@@ -34,7 +35,58 @@ export const getClientById = async (req, res, next) => {
       res.status(STATUS_CODE.NOT_FOUND);
       throw new Error("There is no client with this id");
     }
-    res.status(STATUS_CODE.OK).send(client);
+
+        // Find today's meal entry from dailyMeals
+        const todayMealEntry = client.dailyMeals.find((meal) =>
+          isSameDay(new Date(meal.date), new Date())
+        );
+        console.log("todayMealEntry:",todayMealEntry);
+
+    if (todayMealEntry) {
+      try {
+        // Only populate meals if they exist
+        if (todayMealEntry.breakfast) {
+          await Client.populate(todayMealEntry, { path: "breakfast", model: "Meal" });
+        }
+        if (todayMealEntry.lunch) {
+          await Client.populate(todayMealEntry, { path: "lunch", model: "Meal" });
+        }
+        if (todayMealEntry.dinner) {
+          await Client.populate(todayMealEntry, { path: "dinner", model: "Meal" });
+        }
+        if (todayMealEntry.snacks) {
+
+          let nullIndex=-1;
+          if(todayMealEntry.snacks[0]==null){
+            nullIndex=0;
+          }else if(todayMealEntry.snacks[1]==null){
+            nullIndex=1;
+          }
+          // Populate the snacks array
+          await Client.populate(todayMealEntry, { path: "snacks", model: "Meal" });
+        
+          // Map over the original snacks array to retain the null entries
+          todayMealEntry.snacks = todayMealEntry.snacks.map((snack) => {
+            return snack ? snack : null; // Keep nulls in the array
+          });
+          if(todayMealEntry.snacks.length<2){
+            if(nullIndex==1){
+              todayMealEntry.snacks.push(null);
+            }
+            if(nullIndex==0){
+              todayMealEntry.snacks.unshift(null);
+            }
+          }
+          console.log("snacks:",todayMealEntry.snacks);
+        }
+      } catch (error) {
+        console.error("Error populating meals:", error);
+      }
+    }
+    res.status(STATUS_CODE.OK).send({
+      ...client.toObject(),
+      dailyMeals: todayMealEntry ? [todayMealEntry] : [], // Only return today's meal in dailyMeals array
+    });
   } catch (error) {
     next(error);
   }
@@ -287,14 +339,13 @@ export const addPayment = async (req, res, next) => {
   }
 };
 
-
 // @desc     Add a WeightTracking to client with id
 // @route    PUT /api/v1/coach/clients/weightTracking/:id
 // @access   Private
 
 export const addWeightTracking = async (req, res) => {
-  const { id } = req.params;  // Client's ID
-  const { weight, date } = req.body;  
+  const { id } = req.params; // Client's ID
+  const { weight, date } = req.body;
 
   if (!weight || !date) {
     res.status(STATUS_CODE.BAD_REQUEST);
@@ -330,11 +381,11 @@ export const addWeightTracking = async (req, res) => {
   }
 };
 
-// @desc     get a weightTracking of a client with id 
+// @desc     get a weightTracking of a client with id
 // @route    GET /api/v1/coach/clients/weightTracking/:id
 // @access   Private
-export const getWeightTracking = async (req, res) => {
-  const { id } = req.params;  // Client's ID
+export const getWeightTracking = async (req, res, next) => {
+  const { id } = req.params; // Client's ID
 
   try {
     const client = await Client.findById(id);
@@ -345,6 +396,174 @@ export const getWeightTracking = async (req, res) => {
     }
 
     res.send(client.weightTracking);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// export const addDailyMeal = async (req, res, next) => {
+//   const { clientId } = req.params;
+//   const { mealId, mealType } = req.body;
+//   const allowedMealTypes = [
+//     "breakfast",
+//     "lunch",
+//     "dinner",
+//     "snack-1",
+//     "snack-2",
+//   ];
+//   if (!allowedMealTypes.includes(mealType)) {
+//     res.status(STATUS_CODE.BAD_REQUEST);
+//     throw new Error(`Invalid meal type: ${mealType}.`);
+//   }
+//   try {
+//     const client = await Client.findById(clientId);
+//     if (!client) {
+//       res.status(STATUS_CODE.NOT_FOUND);
+//       throw new Error("No such client in the db");
+//     }
+
+//     const today = new Date().toISOString().split("T")[0];
+//     let mealEntry = client.dailyMeals.find((meal) => meal.date === today);
+
+//     if (!mealEntry) {
+//       mealEntry = { 
+//         date: today, 
+//         breakfast: null, 
+//         lunch: null, 
+//         dinner: null, 
+//         snacks: [null, null] 
+//       };
+//       client.dailyMeals.push(mealEntry);
+//     }
+
+
+//     if (mealType.startsWith("snack")) {
+//       if (mealType === "snack-1") {
+//         mealEntry.snacks[0] = mealId;  // Add or replace snack-1 at position 0
+//       } else if (mealType === "snack-2") {
+//         mealEntry.snacks[1] = mealId;  // Add or replace snack-2 at position 1
+//       }
+//     } else {
+//       // For breakfast, lunch, and dinner
+//       mealEntry[mealType] = mealId;
+//       console.log("console.log(mealType);");
+//       console.log(mealType);
+//     }
+    
+//     await client.save(); 
+//     res.send(client);
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
+// export const addDailyMeal = async (req, res, next) => {
+//   const { clientId } = req.params;
+//   const { mealId, mealType } = req.body;
+//   const allowedMealTypes = [
+//     "breakfast",
+//     "lunch",
+//     "dinner",
+//     "snack-1",
+//     "snack-2",
+//   ];
+
+//   if (!allowedMealTypes.includes(mealType)) {
+//     res.status(STATUS_CODE.BAD_REQUEST);
+//     throw new Error(`Invalid meal type: ${mealType}.`);
+//   }
+
+//   try {
+
+//     // Find the client
+//     const client = await Client.findById(clientId);
+//     if (!client) {
+//       res.status(STATUS_CODE.NOT_FOUND);
+//       throw new Error("No such client in the db");
+//     }
+
+//     // Check if a meal entry for today exists
+//     let mealEntry = client.dailyMeals.find((meal) => isSameDay(meal.date, new Date()));
+//     console.log("Current daily meals:", client.dailyMeals);
+//     console.log("mealEntry--->", mealEntry);
+
+//     if (!mealEntry) {
+//       // Create new meal entry if it doesn't exist
+//       mealEntry = { date: new Date(), breakfast: null, lunch: null, dinner: null, snacks: [null, null] };
+//       client.dailyMeals.push(mealEntry); // Push only if it's a new entry
+//     }
+//     console.log("mealEntry--->", mealEntry);
+//     // Update the specific meal type
+//     if (mealType.startsWith("snack")) {
+//       if (mealType === "snack-1") {
+//         mealEntry.snacks[0] = mealId;  // Add or replace snack-1 at position 0
+//       } else if (mealType === "snack-2") {
+//         mealEntry.snacks[1] = mealId;  // Add or replace snack-2 at position 1
+//       }
+//     } else {
+//       mealEntry[mealType] = mealId; // Set the corresponding meal type
+//     }
+//     console.log("mealEntry--->", mealEntry);
+//     // Save the updated client
+//     await client.save(); 
+//     res.send(client);
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
+
+export const addDailyMeal = async (req, res, next) => {
+  const { clientId } = req.params;
+  const { mealId, mealType } = req.body;
+  const allowedMealTypes = [
+    "breakfast",
+    "lunch",
+    "dinner",
+    "snack-1",
+    "snack-2",
+  ];
+
+  if (!allowedMealTypes.includes(mealType)) {
+    res.status(STATUS_CODE.BAD_REQUEST);
+    throw new Error(`Invalid meal type: ${mealType}.`);
+  }
+
+  try {
+   
+    // Find the client
+    const client = await Client.findById(clientId);
+    if (!client) {
+      res.status(STATUS_CODE.NOT_FOUND);
+      throw new Error("No such client in the db");
+    }
+
+    // Check if a meal entry for today exists
+    let mealEntry = client.dailyMeals.find((meal) => isSameDay(meal.date, new Date()));
+    console.log("Current daily meals:", client.dailyMeals);
+    console.log("mealEntry--->", mealEntry);
+
+    if (!mealEntry) {
+      // Create new meal entry if it doesn't exist
+      const newMealEntry = { date: new Date(), breakfast: null, lunch: null, dinner: null, snacks: [null, null] };
+      client.dailyMeals.push(newMealEntry); // Push the new entry
+      mealEntry = client.dailyMeals[client.dailyMeals.length - 1];
+    }
+    console.log("mealEntry--->", mealEntry);
+    // Update the specific meal type
+    if (mealType.startsWith("snack")) {
+      if (mealType === "snack-1") {
+        mealEntry.snacks[0] = mealId;  // Add or replace snack-1 at position 0
+      } else if (mealType === "snack-2") {
+        mealEntry.snacks[1] = mealId;  // Add or replace snack-2 at position 1
+      }
+    } else {
+      mealEntry[mealType] = mealId; // Set the corresponding meal type
+    }
+    console.log("mealEntry--->", mealEntry);
+    // Save the updated client
+    await client.save(); 
+    res.send(client);
   } catch (error) {
     next(error);
   }

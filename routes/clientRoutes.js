@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  addDailyMeal,
   addDailyTracking,
   addPayment,
   addWeightTracking,
@@ -51,5 +52,7 @@ router.put("/weightTracking/:id", protect, addWeightTracking);
 
 // Route to get a weightTracking of a client with id .
 router.get("/weightTracking/:id", protect, getWeightTracking);
+
+router.post("/dailyMeals/:clientId",protect, addDailyMeal);
 
 export default router;

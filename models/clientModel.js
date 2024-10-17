@@ -63,13 +63,18 @@ const clientSchema = new mongoose.Schema({
       // stepsNumber: { type: Number },
     },
   ],
-    // Weight tracking array with required fields
-    weightTracking: [
-      {
-        weight: { type: Number, required: true },  // The weight value in kg (required)
-        date: { type: Date, required: true },  // Date when the weight was logged (required)
-      }
-    ],
+  dailyMeals: [
+    {
+      date: { type: Date, required: true },
+      breakfast: { type: mongoose.Schema.Types.ObjectId, ref: "Meal" },
+      lunch: { type: mongoose.Schema.Types.ObjectId, ref: "Meal" },
+      dinner: { type: mongoose.Schema.Types.ObjectId, ref: "Meal" },
+      snacks: [
+        { type: mongoose.Schema.Types.ObjectId, ref: "Meal" }, // Snack 1
+        { type: mongoose.Schema.Types.ObjectId, ref: "Meal" }, // Snack 2
+      ],
+    },
+  ],
   weeklyTracking: [{ date: { type: Date } }],
 });
 
