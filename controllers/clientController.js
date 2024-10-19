@@ -564,8 +564,7 @@ export const addDailyMeal = async (req, res, next) => {
         
       } else if (mealType === "snack-2") {
         if(!mealEntry.snacks[1]?.consumed){
-          mealEntry.snacks[1].meal = mealId;  // Add or replace snack-2 at position 1
-          mealEntry.snacks[1].consumed = false;
+          mealEntry.snacks[1] = { meal: mealId, consumed: false };// Add or replace snack-2 at position 1
         }else{
           res.status(STATUS_CODE.BAD_REQUEST);
           throw new Error(`already consumed!`);
