@@ -73,12 +73,27 @@ const clientSchema = new mongoose.Schema({
   dailyMeals: [
     {
       date: { type: Date, required: true },
-      breakfast: { type: mongoose.Schema.Types.ObjectId, ref: "Meal" },
-      lunch: { type: mongoose.Schema.Types.ObjectId, ref: "Meal" },
-      dinner: { type: mongoose.Schema.Types.ObjectId, ref: "Meal" },
+      breakfast: {
+        meal: { type: mongoose.Schema.Types.ObjectId, ref: "Meal" },
+        consumed: { type: Boolean, default: false }
+      },
+      lunch: {
+        meal: { type: mongoose.Schema.Types.ObjectId, ref: "Meal" },
+        consumed: { type: Boolean, default: false }
+      },
+      dinner: {
+        meal: { type: mongoose.Schema.Types.ObjectId, ref: "Meal" },
+        consumed: { type: Boolean, default: false }
+      },
       snacks: [
-        { type: mongoose.Schema.Types.ObjectId, ref: "Meal" }, // Snack 1
-        { type: mongoose.Schema.Types.ObjectId, ref: "Meal" }, // Snack 2
+        {
+          meal: { type: mongoose.Schema.Types.ObjectId, ref: "Meal" },
+          consumed: { type: Boolean, default: false }
+        }, // Snack 1
+        {
+          meal: { type: mongoose.Schema.Types.ObjectId, ref: "Meal" },
+          consumed: { type: Boolean, default: false }
+        } // Snack 2
       ],
     },
   ],

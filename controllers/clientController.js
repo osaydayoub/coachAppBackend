@@ -46,13 +46,13 @@ export const getClientById = async (req, res, next) => {
       try {
         // Only populate meals if they exist
         if (todayMealEntry.breakfast) {
-          await Client.populate(todayMealEntry, { path: "breakfast", model: "Meal" });
+          await Client.populate(todayMealEntry, { path: "breakfast.meal", model: "Meal" });
         }
         if (todayMealEntry.lunch) {
-          await Client.populate(todayMealEntry, { path: "lunch", model: "Meal" });
+          await Client.populate(todayMealEntry, { path: "lunch.meal", model: "Meal" });
         }
         if (todayMealEntry.dinner) {
-          await Client.populate(todayMealEntry, { path: "dinner", model: "Meal" });
+          await Client.populate(todayMealEntry, { path: "dinner.meal", model: "Meal" });
         }
         if (todayMealEntry.snacks) {
 
@@ -63,7 +63,7 @@ export const getClientById = async (req, res, next) => {
             nullIndex=1;
           }
           // Populate the snacks array
-          await Client.populate(todayMealEntry, { path: "snacks", model: "Meal" });
+          await Client.populate(todayMealEntry, { path: "snacks.meal", model: "Meal" });
         
           // Map over the original snacks array to retain the null entries
           todayMealEntry.snacks = todayMealEntry.snacks.map((snack) => {
@@ -549,16 +549,37 @@ export const addDailyMeal = async (req, res, next) => {
       client.dailyMeals.push(newMealEntry); // Push the new entry
       mealEntry = client.dailyMeals[client.dailyMeals.length - 1];
     }
-    console.log("mealEntry--->", mealEntry);
+    
     // Update the specific meal type
     if (mealType.startsWith("snack")) {
       if (mealType === "snack-1") {
-        mealEntry.snacks[0] = mealId;  // Add or replace snack-1 at position 0
+        if(!mealEntry.snacks[0]?.consumed){
+          mealEntry.snacks[0] = { meal: mealId, consumed: false };
+          // mealEntry.snacks[0].meal = mealId;  // Add or replace snack-1 at position 0
+          // mealEntry.snacks[0].consumed = false;
+        }else{
+          res.status(STATUS_CODE.BAD_REQUEST);
+          throw new Error(`already consumed!`);
+        }
+        
       } else if (mealType === "snack-2") {
-        mealEntry.snacks[1] = mealId;  // Add or replace snack-2 at position 1
+        if(!mealEntry.snacks[1]?.consumed){
+          mealEntry.snacks[1].meal = mealId;  // Add or replace snack-2 at position 1
+          mealEntry.snacks[1].consumed = false;
+        }else{
+          res.status(STATUS_CODE.BAD_REQUEST);
+          throw new Error(`already consumed!`);
+        }
       }
     } else {
-      mealEntry[mealType] = mealId; // Set the corresponding meal type
+      if(!mealEntry[mealType].consumed){
+        mealEntry[mealType].meal = mealId; 
+        mealEntry[mealType].consumed = false;
+      }else{
+        res.status(STATUS_CODE.BAD_REQUEST);
+        throw new Error(`already consumed!`);
+      }
+      
     }
     console.log("mealEntry--->", mealEntry);
     // Save the updated client
@@ -568,3 +589,61 @@ export const addDailyMeal = async (req, res, next) => {
     next(error);
   }
 };
+ 
+
+//consumeDailyMeal
+
+export const consumeDailyMeal = async (req, res, next) => {
+  const { clientId } = req.params;
+  //do i need to check also mealId? const { mealId, mealType } = req.body;
+  const {mealType} = req.body;
+  const allowedMealTypes = [
+    "breakfast",
+    "lunch",
+    "dinner",
+    "snack-1",
+    "snack-2",
+  ];
+
+  if (!allowedMealTypes.includes(mealType)) {
+    res.status(STATUS_CODE.BAD_REQUEST);
+    throw new Error(`Invalid meal type: ${mealType}.`);
+  }
+
+  try {
+   
+    // Find the client
+    const client = await Client.findById(clientId);
+    if (!client) {
+      res.status(STATUS_CODE.NOT_FOUND);
+      throw new Error("No such client in the db");
+    }
+
+    // Check if a meal entry for today exists
+    let mealEntry = client.dailyMeals.find((meal) => isSameDay(meal.date, new Date()));
+    console.log("Current daily meals:", client.dailyMeals);
+    console.log("mealEntry--->", mealEntry);
+
+    if (!mealEntry) {
+      res.status(STATUS_CODE.BAD_REQUEST);
+      throw new Error(`no dailyMeals picked for today!`);
+    }
+    
+    // Update the specific meal type
+    if (mealType.startsWith("snack")) {
+      if (mealType === "snack-1") {
+        mealEntry.snacks[0].consumed=true;        
+      } else if (mealType === "snack-2") {
+        mealEntry.snacks[1].consumed=true;   
+      }
+    } else {
+      mealEntry[mealType].consumed=true;
+    }
+    // Save the updated client
+    await client.save(); 
+    res.send(client);
+  } catch (error) {
+    next(error);
+  }
+};
+ 

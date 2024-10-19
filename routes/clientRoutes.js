@@ -5,6 +5,7 @@ import {
   addPayment,
   addWeightTracking,
   assignPackage,
+  consumeDailyMeal,
   createClient,
   getAllClients,
   getClientById,
@@ -54,5 +55,7 @@ router.put("/weightTracking/:id", protect, addWeightTracking);
 router.get("/weightTracking/:id", protect, getWeightTracking);
 
 router.post("/dailyMeals/:clientId",protect, addDailyMeal);
+
+router.post("/consumeDailyMeals/:clientId",protect, consumeDailyMeal);
 
 export default router;
