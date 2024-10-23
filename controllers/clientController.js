@@ -23,7 +23,6 @@ export const getAllClients = async (req, res, next) => {
 // @route    GET /api/v1/coach/clients/:id
 // @access   Private
 export const getClientById = async (req, res, next) => {
-  console.log("getClientById called!");
   try {
     const user = await User.findById(req.user.id);
     if (!user.isAdmin && user.client.toString() !== req.params.id) {
@@ -40,7 +39,7 @@ export const getClientById = async (req, res, next) => {
         const todayMealEntry = client.dailyMeals.find((meal) =>
           isSameDay(new Date(meal.date), new Date())
         );
-        console.log("todayMealEntry:",todayMealEntry);
+        
 
     if (todayMealEntry) {
       try {
@@ -77,7 +76,7 @@ export const getClientById = async (req, res, next) => {
               todayMealEntry.snacks.unshift(null);
             }
           }
-          console.log("snacks:",todayMealEntry.snacks);
+          
         }
       } catch (error) {
         console.error("Error populating meals:", error);
@@ -540,9 +539,7 @@ export const addDailyMeal = async (req, res, next) => {
 
     // Check if a meal entry for today exists
     let mealEntry = client.dailyMeals.find((meal) => isSameDay(meal.date, new Date()));
-    console.log("Current daily meals:", client.dailyMeals);
-    console.log("mealEntry--->", mealEntry);
-
+   
     if (!mealEntry) {
       // Create new meal entry if it doesn't exist
       const newMealEntry = { date: new Date(), breakfast: null, lunch: null, dinner: null, snacks: [null, null] };
@@ -580,7 +577,7 @@ export const addDailyMeal = async (req, res, next) => {
       }
       
     }
-    console.log("mealEntry--->", mealEntry);
+    
     // Save the updated client
     await client.save(); 
     res.send(client);
@@ -620,9 +617,7 @@ export const consumeDailyMeal = async (req, res, next) => {
 
     // Check if a meal entry for today exists
     let mealEntry = client.dailyMeals.find((meal) => isSameDay(meal.date, new Date()));
-    console.log("Current daily meals:", client.dailyMeals);
-    console.log("mealEntry--->", mealEntry);
-
+ 
     if (!mealEntry) {
       res.status(STATUS_CODE.BAD_REQUEST);
       throw new Error(`no dailyMeals picked for today!`);
