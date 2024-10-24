@@ -28,11 +28,11 @@ const userSchema = new mongoose.Schema({
     default: false,
     required: true,
   },
-  // admin: {
-  //   type: mongoose.Schema.Types.ObjectId,
-  //   ref: "Admin",
-  //   default: null,
-  // },
+  isActive: {
+    type: Boolean,
+    default: false,
+    required: true,
+  },
 });
 
 const User = mongoose.model("User", userSchema);
