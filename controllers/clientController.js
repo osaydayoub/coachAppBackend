@@ -12,8 +12,18 @@ export const getAllClients = async (req, res, next) => {
       res.status(STATUS_CODE.UNAUTHORIZED);
       throw new Error("Not authorized");
     }
-    const clients = await Client.find({}).populate("workouts");
-    res.status(STATUS_CODE.OK).send(clients);
+    // const clients = await Client.find({}).populate("workouts");
+        // Retrieve all clients with the user and workouts populated
+        const clients = await Client.find({})
+        .populate("workouts") // Populate workouts
+        .populate("user");    // Populate user to access isActive
+  
+      // Map over clients to include isActive field from the User
+      const clientsWithActiveStatus = clients.map(client => ({
+        ...client.toObject(),
+        isActive: client.user ? client.user.isActive : null, // Add isActive from user
+      }));
+    res.status(STATUS_CODE.OK).send(clientsWithActiveStatus);
   } catch (error) {
     next(error);
   }

@@ -6,7 +6,7 @@ import jwt from "jsonwebtoken";
 
 export const registerUser = async (req, res, next) => {
   try {
-    const { name, age,weight, email, password } = req.body;
+    const { name, age, weight, email, password } = req.body;
     if (!name || isNaN(age) || !email || !password) {
       res.status(STATUS_CODE.BAD_REQUEST);
       throw new Error("Please add all fields");
@@ -37,6 +37,9 @@ export const registerUser = async (req, res, next) => {
       password: hashedPassword,
       client: client._id,
     });
+
+    await Client.findByIdAndUpdate(client._id, { user: user._id });
+    
     res.status(STATUS_CODE.CREATED).send({
       name: user.name,
       email: user.email,
@@ -62,14 +65,12 @@ export const loginUser = async (req, res, next) => {
         path: "workouts",
       },
     });
-    // console.log(user);
     if (user) {
-      // user.populate({
-      //   path: "client",
-      //   populate: {
-      //     path: "workouts",
-      //   },
-      // });
+      // Check if the user is active
+      if (!user.isActive) {
+        res.status(STATUS_CODE.FORBIDDEN);
+        throw new Error("Your account is not active. Please contact support.");
+      }
       const correctPassword = await bcrypt.compare(password, user.password);
       if (correctPassword) {
         res.status(STATUS_CODE.OK).send({
@@ -95,4 +96,42 @@ export const loginUser = async (req, res, next) => {
 //Generate JWT
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "30d" });
+};
+
+export const updateUserActiveStatus = async (req, res, next) => {
+  const { userId, status } = req.body;
+
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user.isAdmin) {
+      res.status(STATUS_CODE.UNAUTHORIZED);
+      throw new Error("Not authorized");
+    }
+    // Find the user by ID and update the activeStatus field
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { isActive: status },
+      { new: true, runValidators: true }
+    );
+    // console.log("activeStatus",status);
+    // console.log("userId",userId);
+    if (!updatedUser) {
+      console.log("No user updated");
+    } else {
+      console.log("Updated User:", updatedUser);
+    }
+
+    if (!updatedUser) {
+      res.status(STATUS_CODE.NOT_FOUND);
+      throw new Error("User not found");
+    }
+
+    const message = status ? "User activated" : "User deactivated";
+    res.status(STATUS_CODE.OK).send({
+      message: message,
+      user: updatedUser,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
