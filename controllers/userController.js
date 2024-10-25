@@ -113,13 +113,6 @@ export const updateUserActiveStatus = async (req, res, next) => {
       { isActive: status },
       { new: true, runValidators: true }
     );
-    // console.log("activeStatus",status);
-    // console.log("userId",userId);
-    if (!updatedUser) {
-      console.log("No user updated");
-    } else {
-      console.log("Updated User:", updatedUser);
-    }
 
     if (!updatedUser) {
       res.status(STATUS_CODE.NOT_FOUND);
