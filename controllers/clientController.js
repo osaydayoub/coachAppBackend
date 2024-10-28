@@ -186,12 +186,22 @@ export const assignPackage = async (req, res, next) => {
   }
 };
 
+// const isSameDay = (date1, date2) => {
+//   return (
+//     date1.getDate() === date2.getDate() &&
+//     date1.getMonth() === date2.getMonth() &&
+//     date1.getFullYear() === date2.getFullYear()
+//   );
+// };
+
+const normalizeDate = (date) => {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+};
+
 const isSameDay = (date1, date2) => {
-  return (
-    date1.getDate() === date2.getDate() &&
-    date1.getMonth() === date2.getMonth() &&
-    date1.getFullYear() === date2.getFullYear()
-  );
+  const d1 = normalizeDate(date1);
+  const d2 = normalizeDate(date2);
+  return d1.getTime() === d2.getTime();
 };
 
 // @desc     add Daily Tracking to a client with id
@@ -547,12 +557,10 @@ export const addDailyMeal = async (req, res, next) => {
       throw new Error("No such client in the db");
     }
 
-    // Check if a meal entry for today exists
     let mealEntry = client.dailyMeals.find((meal) => isSameDay(meal.date, new Date()));
    
     if (!mealEntry) {
-      // Create new meal entry if it doesn't exist
-      const newMealEntry = { date: new Date(), breakfast: null, lunch: null, dinner: null, snacks: [null, null] };
+      const newMealEntry = { date: normalizeDate(new Date()), breakfast: null, lunch: null, dinner: null, snacks: [null, null] };
       client.dailyMeals.push(newMealEntry); // Push the new entry
       mealEntry = client.dailyMeals[client.dailyMeals.length - 1];
     }
