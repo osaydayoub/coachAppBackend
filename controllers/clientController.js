@@ -2,6 +2,36 @@ import STATUS_CODE from "../constants/statusCode.js";
 import Client from "../models/clientModel.js";
 import User from "../models/userModel.js";
 
+// export const isToday=(date)=>{
+//   const inputDate = new Date(date);
+//   inputDate.setHours(0, 0, 0, 0);
+//   const Today= new Date();
+//   Today.setHours(0, 0, 0, 0);
+//   return Today.getTime() === inputDate.getTime()
+// }
+
+const isSameDay = (date1, date2) => {
+  return (
+    date1.getDate() === date2.getDate() &&
+    date1.getMonth() === date2.getMonth() &&
+    date1.getFullYear() === date2.getFullYear()
+  );
+};
+
+const isExactSameDate = (date1, date2) => {
+  return date1.getTime()===date2.getTime();
+};
+
+// const normalizeDate = (date) => {
+//   return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+// };
+
+// const isSameDay = (date1, date2) => {
+//   const d1 = normalizeDate(date1);
+//   const d2 = normalizeDate(date2);
+//   return d1.getTime() === d2.getTime();
+// };
+
 // @des      Get all the clients
 // @route    GET /api/v1/coach/clients
 // @access   Private
@@ -33,6 +63,15 @@ export const getAllClients = async (req, res, next) => {
 // @route    GET /api/v1/coach/clients/:id
 // @access   Private
 export const getClientById = async (req, res, next) => {
+  const {date} = req.body;
+  const clientDate = new Date(date);
+
+
+  if ( !date) {
+    res.status(STATUS_CODE.BAD_REQUEST);
+    throw new Error("Please add date");
+  }
+
   try {
     const user = await User.findById(req.user.id);
     if (!user.isAdmin && user.client.toString() !== req.params.id) {
@@ -47,7 +86,7 @@ export const getClientById = async (req, res, next) => {
 
         // Find today's meal entry from dailyMeals
         const todayMealEntry = client.dailyMeals.find((meal) =>
-          isSameDay(new Date(meal.date), new Date())
+          isExactSameDate(new Date(meal.date), clientDate)
         );
         
 
@@ -186,23 +225,7 @@ export const assignPackage = async (req, res, next) => {
   }
 };
 
-// const isSameDay = (date1, date2) => {
-//   return (
-//     date1.getDate() === date2.getDate() &&
-//     date1.getMonth() === date2.getMonth() &&
-//     date1.getFullYear() === date2.getFullYear()
-//   );
-// };
 
-const normalizeDate = (date) => {
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
-};
-
-const isSameDay = (date1, date2) => {
-  const d1 = normalizeDate(date1);
-  const d2 = normalizeDate(date2);
-  return d1.getTime() === d2.getTime();
-};
 
 // @desc     add Daily Tracking to a client with id
 // @route    PUT /api/v1/coach/clients/dailyTracking/:id
@@ -534,7 +557,8 @@ export const getWeightTracking = async (req, res, next) => {
 
 export const addDailyMeal = async (req, res, next) => {
   const { clientId } = req.params;
-  const { mealId, mealType } = req.body;
+  const { mealId, mealType,date } = req.body;
+  const clientDate = new Date(date);
   const allowedMealTypes = [
     "breakfast",
     "lunch",
@@ -542,6 +566,11 @@ export const addDailyMeal = async (req, res, next) => {
     "snack-1",
     "snack-2",
   ];
+
+  if (!mealId || !mealType||!date) {
+    res.status(STATUS_CODE.BAD_REQUEST);
+    throw new Error("Please add all fields");
+  }
 
   if (!allowedMealTypes.includes(mealType)) {
     res.status(STATUS_CODE.BAD_REQUEST);
@@ -557,10 +586,10 @@ export const addDailyMeal = async (req, res, next) => {
       throw new Error("No such client in the db");
     }
 
-    let mealEntry = client.dailyMeals.find((meal) => isSameDay(meal.date, new Date()));
+    let mealEntry = client.dailyMeals.find((meal) => isExactSameDate(meal.date,clientDate));
    
     if (!mealEntry) {
-      const newMealEntry = { date: normalizeDate(new Date()), breakfast: null, lunch: null, dinner: null, snacks: [null, null] };
+      const newMealEntry = { date: clientDate, breakfast: null, lunch: null, dinner: null, snacks: [null, null] };
       client.dailyMeals.push(newMealEntry); // Push the new entry
       mealEntry = client.dailyMeals[client.dailyMeals.length - 1];
     }
@@ -610,7 +639,8 @@ export const addDailyMeal = async (req, res, next) => {
 export const consumeDailyMeal = async (req, res, next) => {
   const { clientId } = req.params;
   //do i need to check also mealId? const { mealId, mealType } = req.body;
-  const {mealType} = req.body;
+  const {mealType ,date} = req.body;
+  const clientDate = new Date(date);
   const allowedMealTypes = [
     "breakfast",
     "lunch",
@@ -618,6 +648,11 @@ export const consumeDailyMeal = async (req, res, next) => {
     "snack-1",
     "snack-2",
   ];
+
+  if (!mealType || !date) {
+    res.status(STATUS_CODE.BAD_REQUEST);
+    throw new Error("Please add all fields");
+  }
 
   if (!allowedMealTypes.includes(mealType)) {
     res.status(STATUS_CODE.BAD_REQUEST);
@@ -634,7 +669,7 @@ export const consumeDailyMeal = async (req, res, next) => {
     }
 
     // Check if a meal entry for today exists
-    let mealEntry = client.dailyMeals.find((meal) => isSameDay(meal.date, new Date()));
+    let mealEntry = client.dailyMeals.find((meal) => isExactSameDate(meal.date,clientDate));
  
     if (!mealEntry) {
       res.status(STATUS_CODE.BAD_REQUEST);
