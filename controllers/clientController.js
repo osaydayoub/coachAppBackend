@@ -63,7 +63,7 @@ export const getAllClients = async (req, res, next) => {
 // @route    GET /api/v1/coach/clients/:id
 // @access   Private
 export const getClientById = async (req, res, next) => {
-  const {date} = req.body;
+  const { date } = req.query;
   const clientDate = new Date(date);
 
 
