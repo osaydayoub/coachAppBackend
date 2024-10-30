@@ -11,6 +11,7 @@ import {
   getClientById,
   getDailyTracking,
   getWeightTracking,
+  updateWeightTracking,
 } from "../controllers/clientController.js";
 import { protect } from "../middlewares/authMiddleware.js";
 
@@ -49,7 +50,9 @@ router.put("/payment/:id", addPayment);
 
 
 // Route to add a weightTracking to client with id
-router.put("/weightTracking/:id", protect, addWeightTracking);
+router.post("/weightTracking/:id", protect, addWeightTracking);
+
+router.put("/weightTracking/:id", protect, updateWeightTracking);
 
 // Route to get a weightTracking of a client with id .
 router.get("/weightTracking/:id", protect, getWeightTracking);

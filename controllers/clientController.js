@@ -385,7 +385,7 @@ export const addPayment = async (req, res, next) => {
 // @route    PUT /api/v1/coach/clients/weightTracking/:id
 // @access   Private
 
-export const addWeightTracking = async (req, res) => {
+export const addWeightTracking = async (req, res,next) => {
   const { id } = req.params; // Client's ID
   const { weight, date } = req.body;
 
@@ -401,6 +401,13 @@ export const addWeightTracking = async (req, res) => {
       res.status(STATUS_CODE.NOT_FOUND);
       throw new Error("No such client in the db");
     }
+
+    const existingEntry = client.weightTracking.find(entry => isSameDay(new Date(entry.date), new Date(date)));
+    if (existingEntry) {
+      res.status(STATUS_CODE.CONFLICT)
+      throw new Error("Entry with the same date already exists");
+    }
+
     const updatedClient = await Client.findByIdAndUpdate(
       req.params.id,
       {
@@ -413,10 +420,52 @@ export const addWeightTracking = async (req, res) => {
       },
       { new: true } // Return the updated document
     );
-    if (!updatedClient) {
+
+
+    // if (!updatedClient) {
+    //   res.status(STATUS_CODE.NOT_FOUND);
+    //   throw new Error("No such client in the db");
+    // }
+    res.send(updatedClient);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateWeightTracking = async (req, res, next) => {
+  const { id } = req.params; // Client's ID
+  const { weight, date } = req.body;
+
+  if (!weight || !date) {
+    res.status(STATUS_CODE.BAD_REQUEST);
+    throw new Error("Weight and date are required");
+  }
+
+  try {
+    const client = await Client.findById(id);
+
+    if (!client) {
       res.status(STATUS_CODE.NOT_FOUND);
       throw new Error("No such client in the db");
     }
+
+    // Find the entry index to update based on the date
+    const existingEntryIndex = client.weightTracking.findIndex(entry => isSameDay(new Date(entry.date), new Date(date)));
+
+    if (existingEntryIndex === -1) {
+      res.status(STATUS_CODE.NOT_FOUND);
+      throw new Error("No entry found for the specified date");
+    }
+
+    // Update the weight directly in the database without using save
+    const updatedClient = await Client.findByIdAndUpdate(
+      id,
+      {
+        [`weightTracking.${existingEntryIndex}.weight`]: weight // Update the weight at the specific index
+      },
+      { new: true } // Return the updated document
+    );
+
     res.send(updatedClient);
   } catch (error) {
     next(error);
