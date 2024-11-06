@@ -29,6 +29,72 @@ export const createMeal = async (req, res, next) => {
   }
 };
 
+// @desc      Updates specific fields of an existing meal without changing the meal type
+// @route     PUT /api/v1/coach/meals/:id
+// @access    Private
+export const updateMeal = async (req, res, next) => {
+  const { ingredients, totalCalories } = req.body;
+
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user.isAdmin) {
+      res.status(STATUS_CODE.UNAUTHORIZED);
+      throw new Error("Not authorized");
+    }
+
+    // Validate input
+    if (!ingredients || !totalCalories || isNaN(totalCalories)) {
+      res.status(STATUS_CODE.BAD_REQUEST);
+      throw new Error("Please provide both ingredients and a valid totalCalories");
+    }
+
+    const updateData = { ingredients, totalCalories };
+
+    const updatedMeal = await Meal.findByIdAndUpdate(
+      req.params.id,
+      { $set: updateData },
+      { new: true }  
+    );
+
+    if (!updatedMeal) {
+      res.status(STATUS_CODE.NOT_FOUND);
+      throw new Error("Meal not found");
+    }
+
+    res.status(STATUS_CODE.OK).send(updatedMeal);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc      Delete a meal by ID
+// @route     DELETE /api/v1/coach/meals/:id
+// @access    Private
+export const deleteMeal = async (req, res, next) => {
+  const { id } = req.params;
+
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user.isAdmin) {
+      res.status(STATUS_CODE.UNAUTHORIZED);
+      throw new Error("Not authorized");
+    }
+    
+    // Find the meal by ID and delete it
+    const deletedMeal = await Meal.findByIdAndDelete(id);
+
+    // If the meal is not found, return a 404 error
+    if (!deletedMeal) {
+      res.status(STATUS_CODE.NOT_FOUND);
+      throw new Error("Meal not found");
+    }
+
+    res.status(STATUS_CODE.OK).json({ message: "Meal deleted successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @des      Get Meals By Type 
 // @route    GET /api/v1/coach/meals/:type
 // @access   Private
