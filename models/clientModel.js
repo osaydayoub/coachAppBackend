@@ -23,7 +23,7 @@ const clientSchema = new mongoose.Schema({
   },
   phoneNumber: { 
     type: String, 
-    required: [true, "Must provide a phone number"],
+    // required: [true, "Must provide a phone number"],
     match: [/^\d{10}$/, "Please provide a valid 10-digit phone number"], 
   },
   email: {
