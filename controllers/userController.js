@@ -6,11 +6,23 @@ import jwt from "jsonwebtoken";
 
 export const registerUser = async (req, res, next) => {
   try {
-    const { name, age, weight, email, password } = req.body;
-    if (!name || isNaN(age) || !email || !password) {
+    const { name, age, weight,phoneNumber, email, password } = req.body;
+    if (!name|| isNaN(age) || isNaN(weight) || !phoneNumber|| !email || !password) {
       res.status(STATUS_CODE.BAD_REQUEST);
-      throw new Error("Please add all fields");
+      throw new Error("Please add all fields correctly");
     }
+
+    if (weight <= 0) {
+      res.status(STATUS_CODE.BAD_REQUEST);
+      throw new Error("Weight must be a positive number");
+    }
+
+    const phoneRegex = /^\d{10}$/;
+    if (!phoneRegex.test(phoneNumber)) {
+      res.status(STATUS_CODE.BAD_REQUEST);
+      throw new Error("Please provide a valid 10-digit phone number");
+    }
+    
     const userExists = await User.findOne({
       $or: [{ name: name }, { email: email }],
     });
@@ -29,6 +41,7 @@ export const registerUser = async (req, res, next) => {
       email,
       age,
       weight,
+      phoneNumber,
     });
 
     const user = await User.create({

@@ -19,7 +19,7 @@ const isSameDay = (date1, date2) => {
 };
 
 const isExactSameDate = (date1, date2) => {
-  return date1.getTime()===date2.getTime();
+  return date1.getTime() === date2.getTime();
 };
 
 // const normalizeDate = (date) => {
@@ -43,16 +43,16 @@ export const getAllClients = async (req, res, next) => {
       throw new Error("Not authorized");
     }
     // const clients = await Client.find({}).populate("workouts");
-        // Retrieve all clients with the user and workouts populated
-        const clients = await Client.find({})
-        .populate("workouts") // Populate workouts
-        .populate("user");    // Populate user to access isActive
-  
-      // Map over clients to include isActive field from the User
-      const clientsWithActiveStatus = clients.map(client => ({
-        ...client.toObject(),
-        isActive: client.user ? client.user.isActive : null, // Add isActive from user
-      }));
+    // Retrieve all clients with the user and workouts populated
+    const clients = await Client.find({})
+      .populate("workouts") // Populate workouts
+      .populate("user"); // Populate user to access isActive
+
+    // Map over clients to include isActive field from the User
+    const clientsWithActiveStatus = clients.map((client) => ({
+      ...client.toObject(),
+      isActive: client.user ? client.user.isActive : null, // Add isActive from user
+    }));
     res.status(STATUS_CODE.OK).send(clientsWithActiveStatus);
   } catch (error) {
     next(error);
@@ -66,8 +66,7 @@ export const getClientById = async (req, res, next) => {
   const { date } = req.query;
   const clientDate = new Date(date);
 
-
-  if ( !date) {
+  if (!date) {
     res.status(STATUS_CODE.BAD_REQUEST);
     throw new Error("Please add date");
   }
@@ -84,48 +83,57 @@ export const getClientById = async (req, res, next) => {
       throw new Error("There is no client with this id");
     }
 
-        // Find today's meal entry from dailyMeals
-        const todayMealEntry = client.dailyMeals.find((meal) =>
-          isExactSameDate(new Date(meal.date), clientDate)
-        );
-        
+    // Find today's meal entry from dailyMeals
+    const todayMealEntry = client.dailyMeals.find((meal) =>
+      isExactSameDate(new Date(meal.date), clientDate)
+    );
 
     if (todayMealEntry) {
       try {
         // Only populate meals if they exist
         if (todayMealEntry.breakfast) {
-          await Client.populate(todayMealEntry, { path: "breakfast.meal", model: "Meal" });
+          await Client.populate(todayMealEntry, {
+            path: "breakfast.meal",
+            model: "Meal",
+          });
         }
         if (todayMealEntry.lunch) {
-          await Client.populate(todayMealEntry, { path: "lunch.meal", model: "Meal" });
+          await Client.populate(todayMealEntry, {
+            path: "lunch.meal",
+            model: "Meal",
+          });
         }
         if (todayMealEntry.dinner) {
-          await Client.populate(todayMealEntry, { path: "dinner.meal", model: "Meal" });
+          await Client.populate(todayMealEntry, {
+            path: "dinner.meal",
+            model: "Meal",
+          });
         }
         if (todayMealEntry.snacks) {
-
-          let nullIndex=-1;
-          if(todayMealEntry.snacks[0]==null){
-            nullIndex=0;
-          }else if(todayMealEntry.snacks[1]==null){
-            nullIndex=1;
+          let nullIndex = -1;
+          if (todayMealEntry.snacks[0] == null) {
+            nullIndex = 0;
+          } else if (todayMealEntry.snacks[1] == null) {
+            nullIndex = 1;
           }
           // Populate the snacks array
-          await Client.populate(todayMealEntry, { path: "snacks.meal", model: "Meal" });
-        
+          await Client.populate(todayMealEntry, {
+            path: "snacks.meal",
+            model: "Meal",
+          });
+
           // Map over the original snacks array to retain the null entries
           todayMealEntry.snacks = todayMealEntry.snacks.map((snack) => {
             return snack ? snack : null; // Keep nulls in the array
           });
-          if(todayMealEntry.snacks.length<2){
-            if(nullIndex==1){
+          if (todayMealEntry.snacks.length < 2) {
+            if (nullIndex == 1) {
               todayMealEntry.snacks.push(null);
             }
-            if(nullIndex==0){
+            if (nullIndex == 0) {
               todayMealEntry.snacks.unshift(null);
             }
           }
-          
         }
       } catch (error) {
         console.error("Error populating meals:", error);
@@ -144,16 +152,29 @@ export const getClientById = async (req, res, next) => {
 // @route    POST /api/v1/coach/clients
 // @access   Public
 export const createClient = async (req, res, next) => {
-  const { name, email, age } = req.body;
+  const { name, email, age, weight, phoneNumber } = req.body;
   try {
-    if (!name || !email || isNaN(age)) {
+    if (!name || !email || isNaN(age) || isNaN(weight) || !phoneNumber) {
       res.status(STATUS_CODE.BAD_REQUEST);
-      throw new Error("Please add all fields");
+      throw new Error("Please add all fields correctly");
+    }
+
+    if (weight <= 0) {
+      res.status(STATUS_CODE.BAD_REQUEST);
+      throw new Error("Weight must be a positive number");
+    }
+
+    const phoneRegex = /^\d{10}$/;
+    if (!phoneRegex.test(phoneNumber)) {
+      res.status(STATUS_CODE.BAD_REQUEST);
+      throw new Error("Please provide a valid 10-digit phone number");
     }
     const client = await Client.create({
       name,
       email,
       age,
+      weight,
+      phoneNumber,
     });
 
     res.status(STATUS_CODE.CREATED).send(client);
@@ -224,8 +245,6 @@ export const assignPackage = async (req, res, next) => {
     next(error);
   }
 };
-
-
 
 // @desc     add Daily Tracking to a client with id
 // @route    PUT /api/v1/coach/clients/dailyTracking/:id
@@ -385,7 +404,7 @@ export const addPayment = async (req, res, next) => {
 // @route    PUT /api/v1/coach/clients/weightTracking/:id
 // @access   Private
 
-export const addWeightTracking = async (req, res,next) => {
+export const addWeightTracking = async (req, res, next) => {
   const { id } = req.params; // Client's ID
   const { weight, date } = req.body;
 
@@ -402,9 +421,11 @@ export const addWeightTracking = async (req, res,next) => {
       throw new Error("No such client in the db");
     }
 
-    const existingEntry = client.weightTracking.find(entry => isSameDay(new Date(entry.date), new Date(date)));
+    const existingEntry = client.weightTracking.find((entry) =>
+      isSameDay(new Date(entry.date), new Date(date))
+    );
     if (existingEntry) {
-      res.status(STATUS_CODE.CONFLICT)
+      res.status(STATUS_CODE.CONFLICT);
       throw new Error("Entry with the same date already exists");
     }
 
@@ -420,7 +441,6 @@ export const addWeightTracking = async (req, res,next) => {
       },
       { new: true } // Return the updated document
     );
-
 
     // if (!updatedClient) {
     //   res.status(STATUS_CODE.NOT_FOUND);
@@ -450,7 +470,9 @@ export const updateWeightTracking = async (req, res, next) => {
     }
 
     // Find the entry index to update based on the date
-    const existingEntryIndex = client.weightTracking.findIndex(entry => isSameDay(new Date(entry.date), new Date(date)));
+    const existingEntryIndex = client.weightTracking.findIndex((entry) =>
+      isSameDay(new Date(entry.date), new Date(date))
+    );
 
     if (existingEntryIndex === -1) {
       res.status(STATUS_CODE.NOT_FOUND);
@@ -461,7 +483,7 @@ export const updateWeightTracking = async (req, res, next) => {
     const updatedClient = await Client.findByIdAndUpdate(
       id,
       {
-        [`weightTracking.${existingEntryIndex}.weight`]: weight // Update the weight at the specific index
+        [`weightTracking.${existingEntryIndex}.weight`]: weight, // Update the weight at the specific index
       },
       { new: true } // Return the updated document
     );
@@ -517,16 +539,15 @@ export const getWeightTracking = async (req, res, next) => {
 //     let mealEntry = client.dailyMeals.find((meal) => meal.date === today);
 
 //     if (!mealEntry) {
-//       mealEntry = { 
-//         date: today, 
-//         breakfast: null, 
-//         lunch: null, 
-//         dinner: null, 
-//         snacks: [null, null] 
+//       mealEntry = {
+//         date: today,
+//         breakfast: null,
+//         lunch: null,
+//         dinner: null,
+//         snacks: [null, null]
 //       };
 //       client.dailyMeals.push(mealEntry);
 //     }
-
 
 //     if (mealType.startsWith("snack")) {
 //       if (mealType === "snack-1") {
@@ -540,8 +561,8 @@ export const getWeightTracking = async (req, res, next) => {
 //       console.log("console.log(mealType);");
 //       console.log(mealType);
 //     }
-    
-//     await client.save(); 
+
+//     await client.save();
 //     res.send(client);
 //   } catch (error) {
 //     next(error);
@@ -596,17 +617,16 @@ export const getWeightTracking = async (req, res, next) => {
 //     }
 //     console.log("mealEntry--->", mealEntry);
 //     // Save the updated client
-//     await client.save(); 
+//     await client.save();
 //     res.send(client);
 //   } catch (error) {
 //     next(error);
 //   }
 // };
 
-
 export const addDailyMeal = async (req, res, next) => {
   const { clientId } = req.params;
-  const { mealId, mealType,date } = req.body;
+  const { mealId, mealType, date } = req.body;
   const clientDate = new Date(date);
   const allowedMealTypes = [
     "breakfast",
@@ -616,7 +636,7 @@ export const addDailyMeal = async (req, res, next) => {
     "snack-2",
   ];
 
-  if (!mealId || !mealType||!date) {
+  if (!mealId || !mealType || !date) {
     res.status(STATUS_CODE.BAD_REQUEST);
     throw new Error("Please add all fields");
   }
@@ -627,7 +647,6 @@ export const addDailyMeal = async (req, res, next) => {
   }
 
   try {
-   
     // Find the client
     const client = await Client.findById(clientId);
     if (!client) {
@@ -635,60 +654,65 @@ export const addDailyMeal = async (req, res, next) => {
       throw new Error("No such client in the db");
     }
 
-    let mealEntry = client.dailyMeals.find((meal) => isExactSameDate(meal.date,clientDate));
-   
+    let mealEntry = client.dailyMeals.find((meal) =>
+      isExactSameDate(meal.date, clientDate)
+    );
+
     if (!mealEntry) {
-      const newMealEntry = { date: clientDate, breakfast: null, lunch: null, dinner: null, snacks: [null, null] };
+      const newMealEntry = {
+        date: clientDate,
+        breakfast: null,
+        lunch: null,
+        dinner: null,
+        snacks: [null, null],
+      };
       client.dailyMeals.push(newMealEntry); // Push the new entry
       mealEntry = client.dailyMeals[client.dailyMeals.length - 1];
     }
-    
+
     // Update the specific meal type
     if (mealType.startsWith("snack")) {
       if (mealType === "snack-1") {
-        if(!mealEntry.snacks[0]?.consumed){
+        if (!mealEntry.snacks[0]?.consumed) {
           mealEntry.snacks[0] = { meal: mealId, consumed: false };
           // mealEntry.snacks[0].meal = mealId;  // Add or replace snack-1 at position 0
           // mealEntry.snacks[0].consumed = false;
-        }else{
+        } else {
           res.status(STATUS_CODE.BAD_REQUEST);
           throw new Error(`already consumed!`);
         }
-        
       } else if (mealType === "snack-2") {
-        if(!mealEntry.snacks[1]?.consumed){
-          mealEntry.snacks[1] = { meal: mealId, consumed: false };// Add or replace snack-2 at position 1
-        }else{
+        if (!mealEntry.snacks[1]?.consumed) {
+          mealEntry.snacks[1] = { meal: mealId, consumed: false }; // Add or replace snack-2 at position 1
+        } else {
           res.status(STATUS_CODE.BAD_REQUEST);
           throw new Error(`already consumed!`);
         }
       }
     } else {
-      if(!mealEntry[mealType].consumed){
-        mealEntry[mealType].meal = mealId; 
+      if (!mealEntry[mealType].consumed) {
+        mealEntry[mealType].meal = mealId;
         mealEntry[mealType].consumed = false;
-      }else{
+      } else {
         res.status(STATUS_CODE.BAD_REQUEST);
         throw new Error(`already consumed!`);
       }
-      
     }
-    
+
     // Save the updated client
-    await client.save(); 
+    await client.save();
     res.send(client);
   } catch (error) {
     next(error);
   }
 };
- 
 
 //consumeDailyMeal
 
 export const consumeDailyMeal = async (req, res, next) => {
   const { clientId } = req.params;
   //do i need to check also mealId? const { mealId, mealType } = req.body;
-  const {mealType ,date} = req.body;
+  const { mealType, date } = req.body;
   const clientDate = new Date(date);
   const allowedMealTypes = [
     "breakfast",
@@ -709,7 +733,6 @@ export const consumeDailyMeal = async (req, res, next) => {
   }
 
   try {
-   
     // Find the client
     const client = await Client.findById(clientId);
     if (!client) {
@@ -718,28 +741,29 @@ export const consumeDailyMeal = async (req, res, next) => {
     }
 
     // Check if a meal entry for today exists
-    let mealEntry = client.dailyMeals.find((meal) => isExactSameDate(meal.date,clientDate));
- 
+    let mealEntry = client.dailyMeals.find((meal) =>
+      isExactSameDate(meal.date, clientDate)
+    );
+
     if (!mealEntry) {
       res.status(STATUS_CODE.BAD_REQUEST);
       throw new Error(`no dailyMeals picked for today!`);
     }
-    
+
     // Update the specific meal type
     if (mealType.startsWith("snack")) {
       if (mealType === "snack-1") {
-        mealEntry.snacks[0].consumed=true;        
+        mealEntry.snacks[0].consumed = true;
       } else if (mealType === "snack-2") {
-        mealEntry.snacks[1].consumed=true;   
+        mealEntry.snacks[1].consumed = true;
       }
     } else {
-      mealEntry[mealType].consumed=true;
+      mealEntry[mealType].consumed = true;
     }
     // Save the updated client
-    await client.save(); 
+    await client.save();
     res.send(client);
   } catch (error) {
     next(error);
   }
 };
- 
