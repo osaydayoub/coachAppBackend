@@ -3,8 +3,8 @@ import mongoose from "mongoose";
 const workoutSchema = new mongoose.Schema({
   clientName:{ type: String },
   exercise: { type: String },
-  date: { type: Date, default: Date.now },
-//   duration: { type: Number },
+  date: { type: Date },
+  duration: { type: Number },
   client: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Client",

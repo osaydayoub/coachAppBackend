@@ -49,17 +49,46 @@ export const addWorkout = async (req, res, next) => {
       res.status(STATUS_CODE.UNAUTHORIZED);
       throw new Error("Not authorized");
     }
-    const { exercise, date, clientID } = req.body;
+    const { exercise, date, duration, clientID } = req.body;
     const clientExists = await Client.findById(clientID);
     if (!clientExists) {
       res.status(STATUS_CODE.NOT_FOUND);
       throw new Error("No such client in the db");
     }
 
+    const workoutStartTime = new Date(date);
+    const workoutEndTime = new Date(
+      workoutStartTime.getTime() + duration * 60000
+    );
+
+    const conflictingWorkout = await Workout.findOne({
+      $and: [
+        {
+          // Existing workout starts before the new workout ends
+          date: { $lt: workoutEndTime },
+        },
+        {
+          // Existing workout ends after the new workout starts
+          $expr: {
+            $gt: [
+              { $add: ["$date", { $multiply: ["$duration", 60000] }] }, // End time of the existing workout
+              workoutStartTime,
+            ],
+          },
+        },
+      ], 
+    });
+
+    if (conflictingWorkout) {
+      res.status(STATUS_CODE.CONFLICT);
+      throw new Error("Time conflict with another workout");
+    }
+
     const newWorkout = await Workout.create({
       clientName: clientExists.name,
       exercise,
       date,
+      duration,
       client: clientID,
     });
     // console.log(`time=>${newWorkout.date.getHours()}:${newWorkout.date.getMinutes()}`)
