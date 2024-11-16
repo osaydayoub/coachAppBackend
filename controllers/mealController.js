@@ -45,7 +45,9 @@ export const updateMeal = async (req, res, next) => {
     // Validate input
     if (!ingredients || !totalCalories || isNaN(totalCalories)) {
       res.status(STATUS_CODE.BAD_REQUEST);
-      throw new Error("Please provide both ingredients and a valid totalCalories");
+      throw new Error(
+        "Please provide both ingredients and a valid totalCalories"
+      );
     }
 
     const updateData = { ingredients, totalCalories };
@@ -53,7 +55,7 @@ export const updateMeal = async (req, res, next) => {
     const updatedMeal = await Meal.findByIdAndUpdate(
       req.params.id,
       { $set: updateData },
-      { new: true }  
+      { new: true }
     );
 
     if (!updatedMeal) {
@@ -79,7 +81,7 @@ export const deleteMeal = async (req, res, next) => {
       res.status(STATUS_CODE.UNAUTHORIZED);
       throw new Error("Not authorized");
     }
-    
+
     // Find the meal by ID and delete it
     const deletedMeal = await Meal.findByIdAndDelete(id);
 
@@ -95,7 +97,7 @@ export const deleteMeal = async (req, res, next) => {
   }
 };
 
-// @des      Get Meals By Type 
+// @des      Get Meals By Type
 // @route    GET /api/v1/coach/meals/:type
 // @access   Private
 export const getAllMealsByType = async (req, res, next) => {
@@ -117,7 +119,7 @@ export const getAllMealsByType = async (req, res, next) => {
     //Solutions to Prevent Exposing Client IDs so return only the rating of current Client
     // const mealsWithUserRating = meals.map(meal => {
     //   const userRating = meal.ratings[req.user.client] || null; // Get user's rating based on client ID
-    
+
     //   const { ratings, ...mealWithoutRatings } = meal.toObject(); // Exclude ratings
     //   return {
     //     ...mealWithoutRatings,
@@ -131,15 +133,14 @@ export const getAllMealsByType = async (req, res, next) => {
   }
 };
 
-
-export const addMealRating = async (req, res,next) => {
+export const addMealRating = async (req, res, next) => {
   const user = await User.findById(req.user.id);
   if (!user) {
     res.status(STATUS_CODE.UNAUTHORIZED);
     throw new Error("Not authorized");
   }
-  const mealId = req.params.id; 
-  const { clientId, rating } = req.body; 
+  const mealId = req.params.id;
+  const { clientId, rating } = req.body;
 
   try {
     // Find the meal by ID
@@ -150,13 +151,18 @@ export const addMealRating = async (req, res,next) => {
       throw new Error("Meal not found");
     }
 
+    const updatedRatings = { ...meal.ratings, [clientId]: rating };
+
+    const ratings = Object.values(updatedRatings); 
+    const averageRating =
+      ratings.reduce((sum, current) => sum + current, 0) / ratings.length;
+
     const updatedMeal = await Meal.findOneAndUpdate(
-      { _id: mealId }, // Find the meal by ID
-      { 
-        $set: { [`ratings.${clientId}`]: rating } // Dynamically update the ratings field with the clientId as the key
-      },
-      { new: true, upsert: true } // Return the updated document and create it if it doesn't exist
+      { _id: mealId }, 
+      { ratings: updatedRatings, averageRating },
+      { new: true}
     );
+
     res.status(STATUS_CODE.OK).send(updatedMeal);
   } catch (error) {
     next(error);
