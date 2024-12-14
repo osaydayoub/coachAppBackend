@@ -1,6 +1,8 @@
+import getOpenAiInstance from "../config/openai.js";
 import STATUS_CODE from "../constants/statusCode.js";
 import Meal from "../models/mealsModel.js";
 import User from "../models/userModel.js";
+
 
 // @des      creats a new meal
 // @route    POST /api/v1/coach/meals
@@ -153,14 +155,14 @@ export const addMealRating = async (req, res, next) => {
 
     const updatedRatings = { ...meal.ratings, [clientId]: rating };
 
-    const ratings = Object.values(updatedRatings); 
+    const ratings = Object.values(updatedRatings);
     const averageRating =
       ratings.reduce((sum, current) => sum + current, 0) / ratings.length;
 
     const updatedMeal = await Meal.findOneAndUpdate(
-      { _id: mealId }, 
+      { _id: mealId },
       { ratings: updatedRatings, averageRating },
-      { new: true}
+      { new: true }
     );
 
     res.status(STATUS_CODE.OK).send(updatedMeal);
@@ -168,3 +170,43 @@ export const addMealRating = async (req, res, next) => {
     next(error);
   }
 };
+
+export async function generateByType(req, res, next) {
+  const openAI = getOpenAiInstance;
+  const mealType = req.params.type;
+  const calorieLimit = req.query.calorieLimit || 700;
+
+  if (!["breakfast", "lunch", "dinner", "snack"].includes(mealType)) {
+    res.status(STATUS_CODE.BAD_REQUEST);
+    throw new Error("Invalid meal type.");
+  }
+
+  const prompt = `
+    Create a meal of type "${mealType}" in JSON format with a calorie limit of ${calorieLimit} calories:
+    {
+      "ingredients": [
+        {
+          "name": "Ingredient name",
+          "amount": amount (integer),
+          "unit": "appropriate unit (e.g., g, ml for liquids, or units for items like eggs)"
+        }
+      ],
+      "type": "${mealType}",
+      "totalCalories": total calories (integer, no more than ${calorieLimit})
+    }
+    Only respond with the JSON object and nothing else.
+  `;
+
+  try {
+    const response = await openAI.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [{ role: "user", content: prompt }],
+    });
+
+    const meal = response.choices[0].message.content;
+    res.json(JSON.parse(meal)); 
+  } catch (error) {
+    console.error("Error generating meal:", error);
+    next(error);
+  }
+}
