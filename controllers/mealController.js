@@ -9,6 +9,9 @@ import User from "../models/userModel.js";
 // @access   Private
 export const createMeal = async (req, res, next) => {
   const { ingredients, type, totalCalories } = req.body;
+  console.log("ingredients=",ingredients);
+  console.log("type=",type);
+  console.log("totalCalories=",totalCalories);
   try {
     const user = await User.findById(req.user.id);
     if (!user.isAdmin) {
@@ -172,7 +175,7 @@ export const addMealRating = async (req, res, next) => {
 };
 
 export async function generateByType(req, res, next) {
-  const openAI = getOpenAiInstance;
+  const openAI = getOpenAiInstance();
   const mealType = req.params.type;
   const calorieLimit = req.query.calorieLimit || 700;
 
