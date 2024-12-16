@@ -10,8 +10,8 @@ const mealSchema = new mongoose.Schema({
       },
       unit: {
         type: String,
-        enum: ["kg", "g", "ml", "units"],
-        default: "units",
+        // enum: ["kg", "g", "ml", "units"],
+        //default: "units",
       },
     },
   ],
